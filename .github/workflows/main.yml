@@ -14,5 +14,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Push image
         run: |
-          docker build . --tag ghcr.io/Uikola/knative-golang/app:master
-          docker push ghcr.io/Uikola/knative-golang/app:master
+          docker build . --tag ghcr.io/uikola/app:master
+          docker push ghcr.io/uikola/app:master
