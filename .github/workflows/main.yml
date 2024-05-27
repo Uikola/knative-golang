@@ -6,7 +6,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Build and Run
-        run:
-          docker build -t app -f Dockerfile .
-          docker run -p 8000:8000 app:latest
+      - name: Build
+        run: docker build -t app -f Dockerfile .
+      - name: Run
+        run: docker run -p 8000:8000 app:latest
+
