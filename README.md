@@ -9,14 +9,14 @@
    git clone https://github.com/Uikola/knative-golang.git
    ```
 
-2. Запустите go mod tidy:
+2. Запустите билд докер файла
    ```sh
-   go mod tidy
+   docker build -t app -f Dockerfile .
    ```
 
-3. Запустите сервер
+3. Запустите готовый образ
    ```sh
-   go run main.go
+   docker run -p 8000:8000 app:latest
    ```
 
 4. Приложение готово к использованию!

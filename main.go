@@ -23,6 +23,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Post("/cloud-event", CloudEventHandler)
 
+	log.Info().Msg("starting server...")
 	if err := http.ListenAndServe(":8000", r); err != nil {
 		log.Error().Err(err).Msg(err.Error())
 		os.Exit(1)
