@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -26,6 +27,37 @@ type Interface struct {
 	RxBytes int
 	TxPkt   int
 	TxBytes int
+}
+
+func NewInterface(mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) (Interface, error) {
+	mtu, err := strconv.Atoi(mtuStr)
+	if err != nil {
+		return Interface{}, err
+	}
+	rxPkt, err := strconv.Atoi(rxPktStr)
+	if err != nil {
+		return Interface{}, err
+	}
+	rxBytes, err := strconv.Atoi(rxBytesStr)
+	if err != nil {
+		return Interface{}, err
+	}
+	txPkt, err := strconv.Atoi(txPktStr)
+	if err != nil {
+		return Interface{}, err
+	}
+	txBytes, err := strconv.Atoi(txBytesStr)
+	if err != nil {
+		return Interface{}, err
+	}
+
+	return Interface{
+		MTU:     mtu,
+		RxPkt:   rxPkt,
+		RxBytes: rxBytes,
+		TxPkt:   txPkt,
+		TxBytes: txBytes,
+	}, nil
 }
 
 type NetworkInfo struct {
@@ -101,59 +133,21 @@ func parseIfConfigOutput(output string) (NetworkInfo, error) {
 		Interfaces: make(map[string]Interface),
 	}
 
-	interfaces := strings.Split(output, "\n\n")
-	for _, inface := range interfaces {
-		if len(inface) == 0 {
-			continue
+	regex := regexp.MustCompile("([A-Za-z0-9.]+): .*?mtu ([0-9]+)")
+	nameAndMTU := regex.FindAllStringSubmatch(output, -1)
+
+	regex = regexp.MustCompile("RX packets ([0-9]+)  bytes ([0-9]+)")
+	rx := regex.FindAllStringSubmatch(output, -1)
+
+	regex = regexp.MustCompile("TX packets ([0-9]+)  bytes ([0-9]+)")
+	tx := regex.FindAllStringSubmatch(output, -1)
+
+	for i := 0; i < len(nameAndMTU); i++ {
+		inface, err := NewInterface(nameAndMTU[i][2], rx[i][1], rx[i][2], tx[i][1], tx[i][2])
+		if err != nil {
+			return NetworkInfo{}, err
 		}
-
-		interfaceInfo := Interface{}
-
-		lines := strings.Split(inface, "\n")
-		firstElems := strings.Split(lines[0], " ")
-
-		interfaceName := firstElems[0][:len(firstElems[0])-1]
-
-		for _, line := range lines {
-			elems := strings.Split(line, " ")
-			for i, el := range elems {
-				switch el {
-				case "mtu":
-					mtu, err := strconv.Atoi(elems[i+1])
-					if err != nil {
-						return NetworkInfo{}, err
-					}
-					interfaceInfo.MTU = mtu
-				case "RX":
-					if elems[i+1] == "packets" {
-						rxPkt, err := strconv.Atoi(elems[i+2])
-						if err != nil {
-							return NetworkInfo{}, err
-						}
-						rxBts, err := strconv.Atoi(elems[i+5])
-						if err != nil {
-							return NetworkInfo{}, err
-						}
-						interfaceInfo.RxPkt = rxPkt
-						interfaceInfo.RxBytes = rxBts
-					}
-				case "TX":
-					if elems[i+1] == "packets" {
-						rxPkt, err := strconv.Atoi(elems[i+2])
-						if err != nil {
-							return NetworkInfo{}, err
-						}
-						rxBts, err := strconv.Atoi(elems[i+5])
-						if err != nil {
-							return NetworkInfo{}, err
-						}
-						interfaceInfo.TxPkt = rxPkt
-						interfaceInfo.TxBytes = rxBts
-					}
-				}
-			}
-		}
-		networkInfo.Interfaces[interfaceName] = interfaceInfo
+		networkInfo.Interfaces[nameAndMTU[i][1]] = inface
 	}
 	return networkInfo, nil
 }
