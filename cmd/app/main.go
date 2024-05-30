@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Uikola/knative-golang/pkg/zlog"
+	"github.com/sirikothe/gotextfsm"
 	"io"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -133,21 +133,45 @@ func parseIfConfigOutput(output string) (NetworkInfo, error) {
 		Interfaces: make(map[string]Interface),
 	}
 
-	regex := regexp.MustCompile("([A-Za-z0-9.]+): .*?mtu ([0-9]+)")
-	nameAndMTU := regex.FindAllStringSubmatch(output, -1)
+	template := `Value INTERFACE (\S+)
+Value MTU (\d+)
+Value RX_PACKETS (\d+)
+Value RX_BYTES (\d+)
+Value TX_PACKETS (\d+)
+Value TX_BYTES (\d+)
 
-	regex = regexp.MustCompile("RX packets ([0-9]+)  bytes ([0-9]+)")
-	rx := regex.FindAllStringSubmatch(output, -1)
+Start
+  ^${INTERFACE}: flags=\S+  mtu ${MTU}
+  ^\s+RX packets ${RX_PACKETS}  bytes ${RX_BYTES} \(\d+\.?\d* \w+\)
+  ^\s+TX packets ${TX_PACKETS}  bytes ${TX_BYTES} \(\d+\.?\d* \w+\) -> Record
+`
+	fsm := gotextfsm.TextFSM{}
+	err := fsm.ParseString(template)
+	if err != nil {
+		fmt.Printf("Error while parsing template '%s'\n", err.Error())
+		return NetworkInfo{}, err
+	}
+	parser := gotextfsm.ParserOutput{}
+	err = parser.ParseTextString(output, fsm, true)
+	if err != nil {
+		fmt.Printf("Error while parsing input '%s'\n", err.Error())
+	}
 
-	regex = regexp.MustCompile("TX packets ([0-9]+)  bytes ([0-9]+)")
-	tx := regex.FindAllStringSubmatch(output, -1)
-
-	for i := 0; i < len(nameAndMTU); i++ {
-		inface, err := NewInterface(nameAndMTU[i][2], rx[i][1], rx[i][2], tx[i][1], tx[i][2])
+	for _, record := range parser.Dict {
+		inface, err := NewInterface(
+			record["MTU"].(string),
+			record["RX_PACKETS"].(string),
+			record["RX_BYTES"].(string),
+			record["TX_PACKETS"].(string),
+			record["TX_BYTES"].(string),
+		)
 		if err != nil {
 			return NetworkInfo{}, err
 		}
-		networkInfo.Interfaces[nameAndMTU[i][1]] = inface
+
+		name := record["INTERFACE"].(string)
+		networkInfo.Interfaces[name] = inface
 	}
+
 	return networkInfo, nil
 }
