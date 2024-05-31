@@ -11,12 +11,12 @@
 
 2. Запустите билд докер файла
    ```sh
-   docker build -t app -f Dockerfile .
+   docker build -t knative_golang -f Dockerfile .
    ```
 
 3. Запустите готовый образ
    ```sh
-   docker run -p 8000:8000 app:latest
+   docker run -p 8000:8000 knative_golang:latest
    ```
 
 4. Приложение готово к использованию!
