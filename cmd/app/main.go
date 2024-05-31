@@ -22,11 +22,11 @@ const (
 )
 
 type Interface struct {
-	MTU     int
-	RxPkt   int
-	RxBytes int
-	TxPkt   int
-	TxBytes int
+	MTU     int `json:"mtu"`
+	RxPkt   int `json:"rx_pkt"`
+	RxBytes int `json:"rx_bytes"`
+	TxPkt   int `json:"tx_pkt"`
+	TxBytes int `json:"tx_bytes"`
 }
 
 func NewInterface(mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) (Interface, error) {
@@ -61,7 +61,7 @@ func NewInterface(mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) (In
 }
 
 type NetworkInfo struct {
-	Interfaces map[string]Interface
+	Interfaces map[string]Interface `json:"interfaces"`
 }
 
 func main() {
@@ -114,15 +114,8 @@ func CloudEventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for name, values := range networkInfo.Interfaces {
-			fmt.Printf("%s:\n", name)
-			fmt.Printf("	mtu: %d\n", values.MTU)
-			fmt.Printf("	rx_pkt: %d\n", values.RxPkt)
-			fmt.Printf("	rx_bytes: %d\n", values.RxBytes)
-			fmt.Printf("	tx_pkt: %d\n", values.TxPkt)
-			fmt.Printf("	tx_bytes: %d\n", values.TxBytes)
-		}
-
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(networkInfo)
 	} else {
 		log.Info().Msg(event.String())
 	}
