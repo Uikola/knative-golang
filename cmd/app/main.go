@@ -114,8 +114,27 @@ func CloudEventHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		clEvent := cloudevents.NewEvent()
+		clEvent.SetSource("example/uri")
+		clEvent.SetType("example.type")
+		err = clEvent.SetData(cloudevents.ApplicationJSON, networkInfo.Interfaces)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to set cloud event data")
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "internal error"})
+			return
+		}
+
+		clEventJSON, err := json.Marshal(event)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to marshal cloud event")
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "internal error"})
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(networkInfo)
+		_ = json.NewEncoder(w).Encode(clEventJSON)
 	} else {
 		log.Info().Msg(event.String())
 	}
