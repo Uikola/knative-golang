@@ -3,14 +3,15 @@ package entity
 import "strconv"
 
 type Interface struct {
-	MTU     int `json:"mtu"`
-	RxPkt   int `json:"rx_pkt"`
-	RxBytes int `json:"rx_bytes"`
-	TxPkt   int `json:"tx_pkt"`
-	TxBytes int `json:"tx_bytes"`
+	Name    string `json:"name"`
+	MTU     int    `json:"mtu"`
+	RxPkt   int    `json:"rx_pkt"`
+	RxBytes int    `json:"rx_bts"`
+	TxPkt   int    `json:"tx_pkt"`
+	TxBytes int    `json:"tx_bts"`
 }
 
-func NewInterface(mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) (Interface, error) {
+func NewInterface(name, mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) (Interface, error) {
 	mtu, err := strconv.Atoi(mtuStr)
 	if err != nil {
 		return Interface{}, err
@@ -33,6 +34,7 @@ func NewInterface(mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) (In
 	}
 
 	return Interface{
+		Name:    name,
 		MTU:     mtu,
 		RxPkt:   rxPkt,
 		RxBytes: rxBytes,

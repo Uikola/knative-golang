@@ -60,23 +60,15 @@ func ParseEvent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		clEventJSON, err := json.Marshal(event)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to marshal cloud event")
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "internal error"})
-			return
-		}
-
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(clEventJSON)
+		_ = json.NewEncoder(w).Encode(clEvent)
 	} else {
 		log.Info().Msg(event.String())
 	}
 }
 
-func parseIfConfigOutput(output string) (map[string]entity.Interface, error) {
-	networkInfo := make(map[string]entity.Interface)
+func parseIfConfigOutput(output string) ([]entity.Interface, error) {
+	networkInfo := make([]entity.Interface, 0)
 
 	template := `Value INTERFACE (\S+)
 Value MTU (\d+)
@@ -104,6 +96,7 @@ Start
 
 	for _, record := range parser.Dict {
 		inface, err := entity.NewInterface(
+			record["INTERFACE"].(string),
 			record["MTU"].(string),
 			record["RX_PACKETS"].(string),
 			record["RX_BYTES"].(string),
@@ -113,9 +106,7 @@ Start
 		if err != nil {
 			return nil, err
 		}
-
-		name := record["INTERFACE"].(string)
-		networkInfo[name] = inface
+		networkInfo = append(networkInfo, inface)
 	}
 
 	return networkInfo, nil
