@@ -11,27 +11,12 @@ type Interface struct {
 	TxBytes int    `json:"tx_bts"`
 }
 
-func NewInterface(name, mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) (Interface, error) {
-	mtu, err := strconv.Atoi(mtuStr)
-	if err != nil {
-		return Interface{}, err
-	}
-	rxPkt, err := strconv.Atoi(rxPktStr)
-	if err != nil {
-		return Interface{}, err
-	}
-	rxBytes, err := strconv.Atoi(rxBytesStr)
-	if err != nil {
-		return Interface{}, err
-	}
-	txPkt, err := strconv.Atoi(txPktStr)
-	if err != nil {
-		return Interface{}, err
-	}
-	txBytes, err := strconv.Atoi(txBytesStr)
-	if err != nil {
-		return Interface{}, err
-	}
+func NewInterface(name, mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr string) Interface {
+	mtu, _ := strconv.Atoi(mtuStr)
+	rxPkt, _ := strconv.Atoi(rxPktStr)
+	rxBytes, _ := strconv.Atoi(rxBytesStr)
+	txPkt, _ := strconv.Atoi(txPktStr)
+	txBytes, _ := strconv.Atoi(txBytesStr)
 
 	return Interface{
 		Name:    name,
@@ -40,5 +25,5 @@ func NewInterface(name, mtuStr, rxPktStr, rxBytesStr, txPktStr, txBytesStr strin
 		RxBytes: rxBytes,
 		TxPkt:   txPkt,
 		TxBytes: txBytes,
-	}, nil
+	}
 }
