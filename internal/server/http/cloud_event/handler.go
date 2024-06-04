@@ -7,36 +7,24 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/sirikothe/gotextfsm"
-	"io"
 	"net/http"
 	"strings"
 )
 
 func ParseEvent(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to read request body")
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"reason": "bad request"})
-		return
-	}
-
 	event := cloudevents.NewEvent()
-
-	err = json.Unmarshal(body, &event)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to unmarshal json into CloudEvent")
+	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+		log.Error().Err(err).Msg("failed to decode cloud event")
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"reason": "invalid CloudEvent format"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"reason": "invalid cloud event formant"})
 		return
 	}
 
 	var data map[string]string
-	err = json.Unmarshal(event.Data(), &data)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to unmarshal json into CloudEvent")
+	if err := json.Unmarshal(event.Data(), &data); err != nil {
+		log.Error().Err(err).Msg("failed to unmarshal cloud event data")
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"reason": "invalid CloudEvent format"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"reason": "invalid cloud event format"})
 		return
 	}
 
