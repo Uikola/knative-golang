@@ -83,5 +83,24 @@ func ParseEvent(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(responseEvent)
+	} else if data.StdinCmdKubectlGetSvc() {
+		services, err := parser.ParseKubectlGetSvcOutput(data.Stdout)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to parse kubectl get svc output")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "bad request"})
+			return
+		}
+
+		responseEvent, err := parser.ConvertServicesToCloudEvent(services)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to convert services to cloud event")
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "internal error"})
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(responseEvent)
 	}
 }
