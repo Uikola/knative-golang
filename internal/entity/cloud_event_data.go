@@ -3,9 +3,10 @@ package entity
 import "strings"
 
 const (
-	IFCONFIGCMD     = "ifconfig"
-	KUBECTLGETNSCMD = "kubectl get ns"
-	KUBECTLGETPODS  = "kubectl get pods"
+	IFCONFIGCMD       = "ifconfig"
+	KUBECTLGETNSCMD   = "kubectl get ns"
+	KUBECTLGETPODSCMD = "kubectl get pods"
+	KUBECTLGETSVCCMD  = "kubectl get svc"
 )
 
 type CloudEventData struct {
@@ -22,5 +23,9 @@ func (c CloudEventData) StdinCmdKubectlGetNs() bool {
 }
 
 func (c CloudEventData) StdinCmdKubectlGetPods() bool {
-	return strings.Contains(c.Stdin, KUBECTLGETPODS)
+	return strings.Contains(c.Stdin, KUBECTLGETPODSCMD)
+}
+
+func (c CloudEventData) StdinCmdKubectlGetSvc() bool {
+	return strings.Contains(c.Stdin, KUBECTLGETSVCCMD)
 }
