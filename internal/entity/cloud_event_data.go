@@ -5,6 +5,7 @@ import "strings"
 const (
 	IFCONFIGCMD     = "ifconfig"
 	KUBECTLGETNSCMD = "kubectl get ns"
+	KUBECTLGETPODS  = "kubectl get pods"
 )
 
 type CloudEventData struct {
@@ -18,4 +19,8 @@ func (c CloudEventData) StdinCmdIsConfig() bool {
 
 func (c CloudEventData) StdinCmdKubectlGetNs() bool {
 	return strings.Contains(c.Stdin, KUBECTLGETNSCMD)
+}
+
+func (c CloudEventData) StdinCmdKubectlGetPods() bool {
+	return strings.Contains(c.Stdin, KUBECTLGETPODS)
 }

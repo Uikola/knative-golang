@@ -5,17 +5,20 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"github.com/sirikothe/gotextfsm"
+	"strconv"
 )
 
-func ParseKubectlGetNsOutput(output string) ([]entity.NameSpace, error) {
-	namespaceInfo := make([]entity.NameSpace, 0)
+func ParseKubectlGetPodsOutput(output string) ([]entity.Pod, error) {
+	pods := make([]entity.Pod, 0)
 
 	template := `Value NAME (\S+)
+Value READY (\S+)
 Value STATUS (\S+)
+Value RESTARTS (\d+)
 Value AGE (\S+)
 
 Start
-  ^${NAME}\s+${STATUS}\s+${AGE} -> Record`
+ ^${NAME}\s+${READY}\s+${STATUS}\s+${RESTARTS}\s+${AGE} -> Record`
 	fsm := gotextfsm.TextFSM{}
 	err := fsm.ParseString(template)
 	if err != nil {
@@ -32,22 +35,26 @@ Start
 		if record["NAME"] == "NAME" {
 			continue
 		}
-		namespace := entity.NameSpace{
-			Name:   record["NAME"].(string),
-			Status: record["STATUS"].(string),
-			Age:    record["AGE"].(string),
+
+		restarts, _ := strconv.Atoi(record["RESTARTS"].(string))
+		pod := entity.Pod{
+			Name:     record["NAME"].(string),
+			Ready:    record["READY"].(string),
+			Status:   record["STATUS"].(string),
+			Restarts: restarts,
+			Age:      record["AGE"].(string),
 		}
-		namespaceInfo = append(namespaceInfo, namespace)
+		pods = append(pods, pod)
 	}
-	return namespaceInfo, nil
+	return pods, nil
 }
 
-func ConvertNamespaceInfoToCloudEvent(namespaceInfo []entity.NameSpace) (cloudevents.Event, error) {
+func ConvertPodsToCloudEvent(pods []entity.Pod) (cloudevents.Event, error) {
 	event := cloudevents.NewEvent()
-	event.SetSource("kubectlgetns-cmd")
+	event.SetSource("kubectlgetpods-cmd")
 	event.SetID(uuid.New().String())
-	event.SetType("kubectlgetns")
-	if err := event.SetData(cloudevents.ApplicationJSON, namespaceInfo); err != nil {
+	event.SetType("kubectlgetpods")
+	if err := event.SetData(cloudevents.ApplicationJSON, pods); err != nil {
 		return cloudevents.Event{}, err
 	}
 	if err := event.Validate(); err != nil {

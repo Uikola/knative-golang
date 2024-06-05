@@ -48,7 +48,7 @@ func ParseEvent(w http.ResponseWriter, r *http.Request) {
 	} else if data.StdinCmdKubectlGetNs() {
 		namespaceInfo, err := parser.ParseKubectlGetNsOutput(data.Stdout)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to parse kubectlgetns output")
+			log.Error().Err(err).Msg("failed to parse kubectl get ns output")
 			w.WriteHeader(http.StatusBadRequest)
 			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "bad request"})
 			return
@@ -57,6 +57,25 @@ func ParseEvent(w http.ResponseWriter, r *http.Request) {
 		responseEvent, err := parser.ConvertNamespaceInfoToCloudEvent(namespaceInfo)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to convert namespace info to cloud event")
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "internal error"})
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(responseEvent)
+	} else if data.StdinCmdKubectlGetPods() {
+		pods, err := parser.ParseKubectlGetPodsOutput(data.Stdout)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to parse kubectl get pods output")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "bad request"})
+			return
+		}
+
+		responseEvent, err := parser.ConvertPodsToCloudEvent(pods)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to convert pods to cloud event")
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(map[string]string{"reason": "internal error"})
 			return
