@@ -6,11 +6,13 @@ const (
 	IFCONFIGCMD = "ifconfig"
 )
 
-type CloudEventDataRequest struct {
-	Stdin  string `json:"stdin"`
-	Stdout string `json:"stdout"`
+type CloudEventRequest struct {
+	Data struct {
+		Stdin  string `json:"stdin"`
+		Stdout string `json:"stdout"`
+	} `json:"data"`
 }
 
-func (r CloudEventDataRequest) StdinCmdIsConfig() bool {
-	return strings.Contains(r.Stdin, IFCONFIGCMD)
+func (r CloudEventRequest) StdinCmdIsConfig() bool {
+	return strings.Contains(r.Data.Stdin, IFCONFIGCMD)
 }
