@@ -1,10 +1,10 @@
 specVersion: 0.36.0
 name: cloud-event-parser
 runtime: go
-registry: docker.io/uikola
+registry: ghcr.io/uikola
 created: 2024-06-04T05:22:00.873398557Z
 build:
   builder: pack
 deploy:
   namespace: default
-  image: index.docker.io/uikola/cloud-event-parser@sha256:9e55a15ebb7e17d90d93c720e7ed60f69f091b80650ae224d51f887d9a039433
+  image: ghcr.io/uikola/cloud-event-parser@sha256:fe33f5169bd9a6cfc8daf9a6a8183314e657e7b48eeb4ccbe75267295b0cd762

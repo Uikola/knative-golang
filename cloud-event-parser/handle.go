@@ -11,15 +11,12 @@ import (
 
 // Handle an HTTP Request.
 func Handle(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
-	fmt.Printf("Received data %s\n", string(event.Data()))
-
-	var data entity.CloudEventDataRequest
-	if err := event.DataAs(&data); err != nil {
+	var request entity.CloudEventRequest
+	if err := event.DataAs(&request); err != nil {
 		return nil, fmt.Errorf("failed to get event data: %v", err)
 	}
-
-	if data.StdinCmdIsConfig() {
-		networkInfo, err := parseIfConfigOutput(data.Stdout)
+	if request.StdinCmdIsConfig() {
+		networkInfo, err := parseIfConfigOutput(request.Data.Stdout)
 		if err != nil {
 			return nil, fmt.Errorf("error while parsing ifconfig output: %v", err)
 		}
@@ -28,8 +25,6 @@ func Handle(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, e
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert network info to cloud event: %v", err)
 		}
-
-		fmt.Println(responseEvent)
 		return responseEvent, nil
 	}
 
